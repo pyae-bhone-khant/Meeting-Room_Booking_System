@@ -4,69 +4,28 @@ import type { NextRequest } from "next/server";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // 🔑 Better-Auth ရဲ့ Session Token ကို Cookie ထဲကနေ ဆွဲထုတ်ခြင်း
   const sessionToken = request.cookies.get("better-auth.session_token")?.value;
 
+  // ❌ ၁။ အကယ်၍ အကောင့်ဝင်မထားရင် (Session Token မရှိရင်)
   if (!sessionToken) {
-    if (!pathname.startsWith("/login") && !pathname.startsWith("/register")) {
+    // URL လမ်းကြောင်းက /login သို့မဟုတ် /register မဟုတ်ခဲ့ရင် အတင်း Login ဆီ ပြန်မောင်းထုတ်မည်
+    if (!pathname.includes("/login") && !pathname.includes("/register")) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
     return NextResponse.next();
   }
 
-  try {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || "https://meeting-room-booking-system-api.onrender.com";
-    
-    const response = await fetch(`${backendUrl}/api/auth/get-session`, {
-      headers: {
-        Cookie: request.headers.get("cookie") || "",
-      },
-    });
-
-    const sessionData = await response.json();
-    const userRole = sessionData?.user?.role; // "ADMIN" | "OWNER" | "USER"
-
-    if (pathname.startsWith("/login") || pathname.startsWith("/register")) {
-      return redirectToDashboard(userRole, request);
-    }
-
-    if (pathname.startsWith("/ADMIN") && userRole !== "ADMIN") {
-      return redirectToDashboard(userRole, request);
-    }
-
-    if (pathname.startsWith("/OWNER") && userRole !== "OWNER") {
-      return redirectToDashboard(userRole, request);
-    }
-
-    if (pathname.startsWith("/USER") && userRole !== "USER") {
-      return redirectToDashboard(userRole, request);
-    }
-
-    
-    if (pathname === "/") {
-      return redirectToDashboard(userRole, request);
-    }
-
-  } catch (error) {
-    console.error("Auth Middleware Error:", error);
- 
-    return NextResponse.redirect(new URL("/login", request.url));
+  // 🟢 ၂။ အကယ်၍ အကောင့်ဝင်ထားပြီးသားဆိုရင် (Session Token ရှိနေရင်)
+  // အကယ်၍ လူက /login သို့မဟုတ် /register သို့မဟုတ် Root `/` ကို လာရင် /user ဆီ တိုက်ရိုက် ပေးဝင်လိုက်ပါမည်
+  if (pathname.includes("/login") || pathname.includes("/register") || pathname === "/") {
+    return NextResponse.redirect(new URL("/user", request.url));
   }
 
   return NextResponse.next();
 }
 
-function redirectToDashboard(role: string, request: NextRequest) {
-  if (role === "ADMIN") {
-    return NextResponse.redirect(new URL("/admin", request.url));
-  }
-  if (role === "OWNER") {
-    return NextResponse.redirect(new URL("/owner", request.url));
-  }
-  return NextResponse.redirect(new URL("/user", request.url)); 
-}
-
 export const config = {
-  matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
-  ],
+  // Static Files များနှင့် Next.js Internal Files များကိုသာ Middleware မပတ်အောင် ဖယ်ထုတ်ထားခြင်း
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };
