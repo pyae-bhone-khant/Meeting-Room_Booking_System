@@ -44,10 +44,14 @@ export default function LoginForm() {
           const userRole = ctx.data.user.role?.toLowerCase(); 
           console.log('Login successful! Role:', userRole);
           
-          if (userRole === "admin") {
-            router.push("/dashboard");
+          if (userRole === "ADMIN") {
+            router.push("/admin");
+          } else if (userRole === "USER") {
+            router.push("/user");
+          } else if (userRole === "OWNER") {
+            router.push("/owner");
           } else {
-            router.push("/");
+            router.push("/auth/login");
           }
         },
         onError: (ctx) => {
