@@ -10,6 +10,8 @@ import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/src/components/ui/form";
+import { authClient } from "@/src/lib/auth-client";
+import { useRouter } from "next/navigation";
 
 // 📝 Zod Validation Schema
 const loginSchema = z.object({
@@ -19,6 +21,7 @@ const loginSchema = z.object({
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -28,19 +31,43 @@ export default function LoginForm() {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof loginSchema>) => {
-    // 🚀 မင်းရဲ့ Better-Auth သို့မဟုတ် Custom API Logic ကို ဒီမှာ ရေးပါ
-    console.log("Login Values:", values);
+  const onSubmit = async (data: z.infer<typeof loginSchema>) => {
+    try {
+      console.log("Submitting values directly to Better-Auth:", data); // 👈 ဘာတွေပါသွားလဲဆိုတာ console မှာ စစ်လို့ရအောင် ထည့်ထားပေးပါတယ်
+      
+      await authClient.signIn.email({
+        email: data.email,
+        password: data.password,
+      }, {
+        onSuccess: (ctx) => {
+          // 💡 Better-Auth တွင် role အား သတ်မှတ်ချက်အတိုင်း ကွက်တိရယူခြင်း
+          const userRole = ctx.data.user.role?.toLowerCase(); 
+          console.log('Login successful! Role:', userRole);
+          
+          if (userRole === "admin") {
+            router.push("/dashboard");
+          } else {
+            router.push("/");
+          }
+        },
+        onError: (ctx) => {
+          console.error('Better-Auth Login failed:', ctx.error);
+          alert(ctx.error.message || "Invalid email or password");
+        }
+      });
+    } catch (error) {
+      console.error('Login error:', error);
+    }
   };
 
-  // Demo အကောင့်ကို နှိပ်လိုက်ရင် Form ထဲ အော်တိုဖြည့်ပေးမည့် Helper
+  // ✨ စောစောက Bug ကို အမြစ်ပြတ်အောင် ပြင်ဆင်ထားသည့် နေရာဖြစ်ပါသည်
   const handleFillDemo = (email: string, pass: string) => {
-    form.setValue("email", email);
-    form.setValue("password", pass);
+    form.setValue("email", email, { shouldValidate: true, shouldDirty: true });
+    form.setValue("password", pass, { shouldValidate: true, shouldDirty: true });
   };
 
   return (
-   <div className="flex flex-col md:flex-row gap-6 w-full max-w-4xl mx-auto items-start justify-center p-4">
+    <div className="flex flex-col md:flex-row gap-6 w-full max-w-4xl mx-auto items-start justify-center p-4">
       
       {/* 🔐 Main Login Card (ဘယ်ဘက်ခြမ်း) */}
       <Card className="bg-white border border-gray-200 shadow-xl w-full md:max-w-[460px] shrink-0">
