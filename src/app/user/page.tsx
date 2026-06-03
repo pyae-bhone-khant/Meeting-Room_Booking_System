@@ -8,19 +8,17 @@ import { LogOut } from "lucide-react";
 export default function UserPage() {
     const router = useRouter();
 
-    const handleLogout = async () => {
-        try {
-            await authClient.signOut({
-                fetchOptions: {
-                    onSuccess: () => {
-                        router.push("/login");
-                    },
-                },
-            });
-        } catch (error) {
-            console.error("Logout failed:", error);
-        }
-    };
+   const handleLogout = async () => {
+  try {
+    const result = await authClient.signOut();
+
+    console.log(result);
+
+    router.push("/auth/login");
+  } catch (error) {
+    console.error(error);
+  }
+};
 
     return (
         <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 p-8">
