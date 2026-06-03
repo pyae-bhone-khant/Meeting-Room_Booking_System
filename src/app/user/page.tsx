@@ -14,7 +14,7 @@ export default function UserPage() {
 
     console.log(result);
 
-    router.push("/auth/login");
+    router.push("/login");
   } catch (error) {
     console.error(error);
   }
