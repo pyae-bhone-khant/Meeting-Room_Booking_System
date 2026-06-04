@@ -1,18 +1,13 @@
-// src/middleware.ts
 import { NextRequest, NextResponse } from "next/server";
-import { headers } from "next/headers";
 import { authClient } from "./lib/auth-client";
 
-// 👤 Project ရဲ့ Role သတ်မှတ်ချက်အတိုင်း Interface တည်ဆောက်ခြင်း
+// Role များအတွက် Type သတ်မှတ်ခြင်း
+type Role = "ADMIN" | "OWNER" | "USER";
+
 interface User {
   id: string;
   email: string;
-  name: string;
-  emailVerified: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  image?: string | null;
-  role?: "ADMIN" | "OWNER" | "USER"; // 🎯 Role ၃ မျိုးစလုံး ထည့်သွင်းထားသည်
+  role?: Role;
   [key: string]: any;
 }
 
@@ -21,12 +16,15 @@ interface Session {
   [key: string]: any;
 }
 
-// 🔑 Better-Auth Session ကို လက်ရှိ Request Headers များဖြင့် ရယူခြင်း
-const getSession = async () => {
+// 🔑 Session ကို Request Header ၏ Cookie နှင့်အတူ Fetch လုပ်ခြင်း
+const getSession = async (request: NextRequest) => {
   try {
     const session = await authClient.getSession({
       fetchOptions: {
-        headers: await headers(),
+        headers: {
+          // ✅ Browser မှ Cookie ကို Backend ဆီသို့ သေချာပေါက် ပို့ပေးခြင်း
+          cookie: request.headers.get("cookie") || "",
+        },
       },
     });
     return session.data as Session | null;
@@ -35,57 +33,46 @@ const getSession = async () => {
   }
 };
 
-// 🔄 Role အလိုက် သက်ဆိုင်ရာ လမ်းကြောင်းဆီ Redirect လုပ်ပေးမည့် Helper Function
+// 🔄 Role အလိုက် Dashboard သို့ ပို့ပေးမည့် Function
 function redirectToDashboard(role: string, request: NextRequest) {
-  if (role === "ADMIN") {
-    return NextResponse.redirect(new URL("/admin", request.url));
-  }
-  if (role === "OWNER") {
-    return NextResponse.redirect(new URL("/owner", request.url));
-  }
-  return NextResponse.redirect(new URL("/user", request.url));
+  const path = role === "ADMIN" ? "/admin" : role === "OWNER" ? "/owner" : "/user";
+  return NextResponse.redirect(new URL(path, request.url));
 }
 
-// 🌟 ၁။ Named Export အနေဖြင့် သတ်မှတ်ခြင်း
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const session = await getSession();
-  
-  // Role ကို အမြဲတမ်း စာလုံးအကြီးဖြင့် ရယူပြီး Default အနေဖြင့် "USER" ပေးထားမည်
-  const userRole = (session?.user as User | undefined)?.role?.toUpperCase() ?? "USER";
+  const session = await getSession(request);
 
-  // 🚪 Auth Pages (Login / Register) စစ်ဆေးခြင်း
+  // Default အနေဖြင့် Role မရှိပါက "USER" ဟု သတ်မှတ်သည်
+  const userRole = (session?.user?.role?.toUpperCase() as Role) ?? "USER";
+
+  // 1. Auth Pages (Login/Register) များကို စစ်ဆေးခြင်း
   if (pathname.startsWith("/login") || pathname.startsWith("/register")) {
     if (session) {
-      // အကောင့်ဝင်ပြီးသားလူဆိုရင် Dashboard ဆီ တိုက်ရိုက် မောင်းထုတ်မည်
       return redirectToDashboard(userRole, request);
     }
     return NextResponse.next();
   }
 
-  // ❌ အကယ်၍ အကောင့်ဝင်မထားရင် (Session မရှိရင်) Auth Pages မဟုတ်သမျှ ဝင်ခွင့်မပြုပါ
+  // 2. Protected Routes များအတွက် Session မရှိပါက Login ဆီ ပြန်ပို့ခြင်း
   if (!session) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // 🔒 Role-Based Route Protection (Folder လမ်းကြောင်းများအား စောင့်ကြည့်စစ်ဆေးခြင်း)
-  
-  // Admin Folder Route Protection
+  // 3. Role-Based Route Protection (သက်ဆိုင်ရာ Role မှလွဲ၍ တခြားသူများဝင်ခြင်းကို ပိတ်ပင်ခြင်း)
   if (pathname.startsWith("/admin") && userRole !== "ADMIN") {
     return redirectToDashboard(userRole, request);
   }
 
-  // Owner Folder Route Protection
   if (pathname.startsWith("/owner") && userRole !== "OWNER") {
     return redirectToDashboard(userRole, request);
   }
 
-  // User Folder Route Protection
   if (pathname.startsWith("/user") && userRole !== "USER") {
     return redirectToDashboard(userRole, request);
   }
 
-  // 🏠 Root `/` လမ်းကြောင်းကို လာရောက်လျှင် သက်ဆိုင်ရာ Dashboard ဆီ ပို့ပေးခြင်း
+  // 4. Root Path ("/") သို့ရောက်လာပါက Role အလိုက် သင့်လျော်ရာဆီ ပို့ပေးခြင်း
   if (pathname === "/") {
     return redirectToDashboard(userRole, request);
   }
@@ -93,10 +80,7 @@ export async function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 
-// 🌟 ၂။ Next.js 16 Compiler / Turbopack အတွက် Default Export ပါ တစ်ခါတည်း တွဲထုတ်ပေးခြင်း
-export default middleware;
-
-// 🎯 Middleware အလုပ်လုပ်မည့် ရွေးချယ်ထားသော Route Configurations
+// 🎯 Middleware အလုပ်လုပ်မည့် Routes များ
 export const config = {
   matcher: [
     "/",
