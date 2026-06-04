@@ -23,6 +23,7 @@ const getSession = async (request: NextRequest) => {
       fetchOptions: {
         headers: {
           // ✅ Browser မှ Cookie ကို Backend ဆီသို့ သေချာပေါက် ပို့ပေးခြင်း
+          // ဒီအချက်က Login ပြန်ကျနေတဲ့ပြဿနာကို ဖြေရှင်းပေးမှာပါ
           cookie: request.headers.get("cookie") || "",
         },
       },
@@ -33,9 +34,10 @@ const getSession = async (request: NextRequest) => {
   }
 };
 
-// 🔄 Role အလိုက် Dashboard သို့ ပို့ပေးမည့် Function
-function redirectToDashboard(role: string, request: NextRequest) {
-  const path = role === "ADMIN" ? "/admin" : role === "OWNER" ? "/owner" : "/user";
+// 🔄 Role အလိုက် Dashboard သို့ ပို့ပေးမည့် Helper Function
+function redirectToDashboard(role: string | undefined, request: NextRequest) {
+  const normalizedRole = role?.toUpperCase();
+  const path = normalizedRole === "ADMIN" ? "/admin" : normalizedRole === "OWNER" ? "/owner" : "/user";
   return NextResponse.redirect(new URL(path, request.url));
 }
 
@@ -43,23 +45,23 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const session = await getSession(request);
 
-  // Default အနေဖြင့် Role မရှိပါက "USER" ဟု သတ်မှတ်သည်
-  const userRole = (session?.user?.role?.toUpperCase() as Role) ?? "USER";
-
   // 1. Auth Pages (Login/Register) များကို စစ်ဆေးခြင်း
   if (pathname.startsWith("/login") || pathname.startsWith("/register")) {
     if (session) {
-      return redirectToDashboard(userRole, request);
+      // အကောင့်ဝင်ပြီးသားဆိုရင် Dashboard ဆီပဲ ပို့ပေးပါ
+      return redirectToDashboard(session.user.role, request);
     }
     return NextResponse.next();
   }
 
-  // 2. Protected Routes များအတွက် Session မရှိပါက Login ဆီ ပြန်ပို့ခြင်း
+  // 2. Protected Routes (Session မရှိရင် Login ဆီ ပို့ပါ)
   if (!session) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // 3. Role-Based Route Protection (သက်ဆိုင်ရာ Role မှလွဲ၍ တခြားသူများဝင်ခြင်းကို ပိတ်ပင်ခြင်း)
+  // 3. Role-Based Route Protection
+  const userRole = session.user.role?.toUpperCase();
+
   if (pathname.startsWith("/admin") && userRole !== "ADMIN") {
     return redirectToDashboard(userRole, request);
   }
