@@ -10,6 +10,7 @@ import { userService } from "@/src/lib/axios";
 import TotalData from "./totaldata";
 import SearchUser from "./SearchUser";
 import AllBooking from "./AllBooking";
+import CreateBookingModal from "./CreateBooking";
 
 export default function AdminPage() {
     
@@ -20,11 +21,7 @@ export default function AdminPage() {
      <div className="flex justify-between items-center">
 
         <div className="mt-4 gap-4 flex">
-      <CustomButton 
-        label="Create Booking" 
-        onClick={() => console.log("Create booking clicked")} 
-        className=""
-      /> 
+  <CreateBookingModal />
        <CustomButton 
         label="View All Bookings" 
         onClick={() => console.log("View all bookings clicked")} 

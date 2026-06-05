@@ -35,5 +35,14 @@ export const userService = {
       console.error("Error fetching users data:", error);
       throw error;
     }
+  } , 
+  async deleteBooking(id: string) {
+  try {
+    const response = await apiClient.delete(`/api/user/deleteBooking/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting booking:", error);
+    throw error;
   }
+}
 };
