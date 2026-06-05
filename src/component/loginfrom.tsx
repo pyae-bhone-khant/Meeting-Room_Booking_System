@@ -26,6 +26,7 @@ import {
 } from "@/src/components/ui/form";
 import { authClient } from "@/src/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { sessionMiddleware } from "better-auth/api";
 
 // 📝 Zod Validation Schema
 const loginSchema = z.object({
@@ -64,12 +65,12 @@ export default function LoginForm() {
 
             if (userRole === "ADMIN") {
               router.push("/admin");
-            } else if (userRole === "USER") {
-              router.push("/user");
             } else if (userRole === "OWNER") {
               router.push("/owner");
+            } else if (userRole === "USER") {
+              router.push("/user");
             } else {
-              router.push("/login"); // fallback Path အမှန်
+              router.push("/login");
             }
           },
           onError: (ctx) => {
