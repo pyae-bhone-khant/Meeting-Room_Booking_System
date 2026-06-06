@@ -50,9 +50,7 @@ export default function CreateBookingModal() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger >
-        <CustomButton label="Create Booking" />
-      </DialogTrigger>
+      <DialogTrigger render={<CustomButton label="Create Booking" />} />
       
       <DialogContent className="sm:max-w-[800px] min-h-[600px] p-8">
         <DialogHeader>

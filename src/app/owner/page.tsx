@@ -8,11 +8,11 @@ import CreateBookingModal from './components/CreateBookingModal';
 import LogoutButton from './components/LogoutButton';
 
 /**
- * User Page Component
- * Manages booking display, creation, and deletion for authenticated users
+ * Owner Page Component
+ * Manages booking display, creation, and deletion for owner users
  * Implements proper state management, error handling, and data refresh logic
  */
-export default function UserPage() {
+export default function OwnerPage() {
   // State management for bookings data
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
   const [ownBookings, setOwnBookings] = useState<Booking[]>([]);
@@ -22,41 +22,49 @@ export default function UserPage() {
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Fetch bookings from API on component mount
-   * Handles both all bookings and user's own bookings
+   * Calculate summary data from bookings
+   */
+  const summary = {
+    totalBookings: allBookings.length,
+    totalHours: allBookings.reduce((acc, booking) => {
+      const start = new Date(booking.startTime).getTime();
+      const end = new Date(booking.endTime).getTime();
+      const diffInHours = (end - start) / (1000 * 60 * 60);
+      return acc + diffInHours;
+    }, 0).toFixed(1),
+    activeUsers: new Set(allBookings.map((b: any) => b.userId)).size
+  };
+
+  /**
+   * Fetch bookings and summary from API on component mount
    */
   useEffect(() => {
-    fetchBookings();
+    fetchData();
   }, []);
 
   /**
    * Fetch bookings from the API
    * Updates state with fetched data or error message
    */
-  const fetchBookings = async () => {
+  const fetchData = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // Fetch both all bookings and own bookings in parallel
+      // Fetch all bookings and own bookings in parallel
       const [allData, ownData] = await Promise.all([
-        bookingService.getAllBookings(),
-        bookingService.getOwnBookings()
+        bookingService.ownerGetAllBookings(),
+        bookingService.ownerGetOwnBookings()
       ]);
 
-      console.log('Raw all bookings response:', allData);
-      console.log('Raw own bookings response:', ownData);
-      console.log('All bookings is array:', Array.isArray(allData));
-      console.log('Own bookings is array:', Array.isArray(ownData));
+      console.log('Owner all bookings response:', allData);
+      console.log('Owner own bookings response:', ownData);
 
       setAllBookings(allData);
       setOwnBookings(ownData);
-      
-      console.log('Set allBookings state:', allData);
-      console.log('Set ownBookings state:', ownData);
     } catch (err) {
-      console.error('Error fetching bookings:', err);
-      setError('Failed to load bookings. Please try again later.');
+      console.error('Error fetching data:', err);
+      setError('Failed to load data. Please try again later.');
     } finally {
       setIsLoading(false);
     }
@@ -76,8 +84,8 @@ export default function UserPage() {
       await bookingService.deleteBooking(id);
       alert('Booking deleted successfully!');
       
-      // Refresh bookings list after successful deletion
-      await fetchBookings();
+      // Refresh data after successful deletion
+      await fetchData();
     } catch (err: any) {
       console.error('Delete failed:', err.response?.data || err.message);
       alert(`Failed to delete booking: ${err.response?.data?.message || 'Internal Server Error'}`);
@@ -90,10 +98,10 @@ export default function UserPage() {
   if (error) {
     return (
       <div className="w-full p-8">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+        <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-lg">
           {error}
           <button 
-            onClick={fetchBookings}
+            onClick={fetchData}
             className="ml-4 underline hover:text-red-900"
           >
             Retry
@@ -104,21 +112,42 @@ export default function UserPage() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-8">
+    <div className="w-full min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-8">
       {/* Header with title and action buttons */}
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-12">
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              My Bookings
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+              Owner Dashboard
             </h1>
             <p className="text-gray-600 mt-2">Manage your meeting room reservations</p>
           </div>
           <div className="flex gap-4">
-            <CreateBookingModal onSuccess={fetchBookings} />
+            <CreateBookingModal onSuccess={fetchData} />
             <LogoutButton />
           </div>
         </div>
+
+        {/* Summary Section */}
+        {summary && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-green-100">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Summary</h2>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="bg-green-50 rounded-xl p-4 text-center">
+                <p className="text-sm text-gray-500 uppercase tracking-wide font-semibold">Total Bookings</p>
+                <p className="text-3xl font-bold text-green-600">{summary.totalBookings || 0}</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-4 text-center">
+                <p className="text-sm text-gray-500 uppercase tracking-wide font-semibold">Total Hours</p>
+                <p className="text-3xl font-bold text-blue-600">{summary.totalHours || 0}</p>
+              </div>
+              <div className="bg-white rounded-xl p-4 text-center border border-gray-200">
+                <p className="text-sm text-gray-500 uppercase tracking-wide font-semibold">Active Users</p>
+                <p className="text-3xl font-bold text-gray-700">{summary.activeUsers || 0}</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Error message (if any) */}
         {error && (
@@ -127,7 +156,7 @@ export default function UserPage() {
               <span className="mr-3">⚠️</span>
               <span>{error}</span>
               <button 
-                onClick={fetchBookings}
+                onClick={fetchData}
                 className="ml-4 underline hover:text-red-900 font-medium"
               >
                 Retry

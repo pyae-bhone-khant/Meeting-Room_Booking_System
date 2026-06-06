@@ -28,20 +28,21 @@ export default function AllBooking() {
   };
 
   return (
-    <div className="p-8">
+    <div className="p-0">
       {/* --- CONFIRMATION MODAL --- */}
       {deleteId && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-2xl shadow-xl w-96">
-            <h3 className="text-lg font-bold mb-4">Are you sure you want to delete this Booking?</h3>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white border border-gray-200 p-6 rounded-2xl shadow-2xl w-96">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Delete Booking</h3>
+            <p className="text-gray-600 mb-6">Are you sure you want to delete this booking? This action cannot be undone.</p>
             <div className="flex gap-4">
               <button 
                 onClick={confirmDelete} 
-                className="flex-1 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600"
+                className="flex-1 bg-red-500 text-white py-3 rounded-xl hover:bg-red-600 font-semibold transition-colors"
               >Delete</button>
               <button 
                 onClick={() => setDeleteId(null)} 
-                className="flex-1 bg-gray-200 py-2 rounded-lg hover:bg-gray-300"
+                className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl hover:bg-gray-200 font-semibold transition-colors"
               >Cancel</button>
             </div>
           </div>
@@ -50,27 +51,54 @@ export default function AllBooking() {
 
       {/* --- BOOKING LIST --- */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">All Booking</h1>
+        <h2 className="text-2xl font-bold text-gray-900">All Bookings</h2>
       </div>
 
       <div className="space-y-4">
-        {bookings.map((item: any) => (
-          <div key={item.id} className="bg-gray-200 rounded-xl p-4 flex items-center justify-between border border-gray-300">
-            <div className="w-1/4">
-              <h3 className="font-bold text-lg">{item.roomNo}</h3>
-              <p className="text-gray-600">{item.location}</p>
+        {bookings.map((item: any, index: number) => (
+          <div 
+            key={item.id} 
+            className="bg-white border border-blue-200 rounded-2xl p-6 flex items-center justify-between hover:border-blue-300 transition-all duration-300 shadow-sm"
+            style={{ animationDelay: `${index * 50}ms` }}
+          >
+            <div className="flex-1">
+              <div className="flex items-center gap-4">
+                {/* <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-green-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md">
+                  {item.roomNo?.charAt(0) || 'R'}
+                </div> */}
+                <div>
+                  <h3 className="font-bold text-xl text-gray-900">{item.roomNo}</h3>
+                  <p className="text-gray-500 text-sm">{item.location}</p>
+                </div>
+              </div>
             </div>
-            <div className="w-1/4 text-center">{new Date(item.startDate).toLocaleDateString()}</div>
-            <div className="w-1/4 text-center">
-              {new Date(item.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - 
-              {new Date(item.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            
+            <div className="flex items-center gap-8">
+              <div className="text-center">
+                <p className="text-xs text-gray-400 uppercase tracking-wide font-semibold">Date</p>
+                <p className="text-gray-700 font-medium">{new Date(item.startDate).toLocaleDateString()}</p>
+              </div>
+              
+              <div className="text-center">
+                <p className="text-xs text-gray-400 uppercase tracking-wide font-semibold">Time</p>
+                <p className="text-gray-700 font-medium">
+                  {new Date(item.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - 
+                  {new Date(item.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+              
+              <div className="text-center">
+                <p className="text-xs text-gray-400 uppercase tracking-wide font-semibold">Type</p>
+                <span className="inline-block px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-sm font-medium">
+                  {item.roomType}
+                </span>
+              </div>
             </div>
-            <div className="w-1/6 text-center font-medium">{item.roomType}</div>
             
             {/* Trigger Modal */}
             <button 
               onClick={() => setDeleteId(item.id)} 
-              className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+              className="ml-6 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white px-5 py-2.5 rounded-xl font-medium transition-all duration-200 hover:shadow-md"
             >
               Delete
             </button>

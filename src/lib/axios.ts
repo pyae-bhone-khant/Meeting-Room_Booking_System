@@ -44,5 +44,32 @@ export const userService = {
     console.error("Error deleting booking:", error);
     throw error;
   }
-}
+},
+  async createUser(userData: { name: string; email: string; password: string; role: string }) {
+    try {
+      const response = await apiClient.post('/api/admin/createUser', userData);
+      return response.data;
+    } catch (error) {
+      console.error("Error creating user:", error);
+      throw error;
+    }
+  },
+  async changeUserRole(userId: string, role: string) {
+    try {
+      const response = await apiClient.post(`/api/admin/changeUserRole/${userId}`, { role });
+      return response.data;
+    } catch (error) {
+      console.error("Error changing user role:", error);
+      throw error;
+    }
+  },
+  async deleteUser(userId: string) {
+    try {
+      const response = await apiClient.delete(`/api/admin/deleteUser/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      throw error;
+    }
+  }
 };

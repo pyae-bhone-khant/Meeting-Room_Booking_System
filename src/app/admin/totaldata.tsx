@@ -22,36 +22,47 @@ export default function TotalData() {
   }, []);
 
   return (
-    <div className="flex gap-4 mt-8">
+    <div className="grid grid-cols-3 gap-6">
       {/* Top Users */}
-      <div className="bg-blue-800 text-white p-4 rounded-lg w-1/3">
-        <div className="text-3xl flex items-center justify-center mt-3 gap-2">
-          <Users /> <span>Top Users</span>
+      <div className="bg-white border border-blue-200 rounded-2xl p-6 shadow-sm">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+            <Users className="w-6 h-6 text-blue-600" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900">Active Users</h3>
         </div>
-        <div className="text-2xl justify-center text-center mt-5 flex items-center gap-2">
+        <div className="space-y-3">
           {users.slice(0, 3).map((user, index) => (
-            <div key={user.id} className="flex mt-2 gap-2">
-              <span className="font-bold">{index + 1}.</span>
-              <span>{user.name}</span>
+            <div key={user.id} className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl">
+              <span className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                {index + 1}
+              </span>
+              <span className="text-gray-800">{user.name}</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* Total Bookings */}
-      <div className="bg-blue-800 text-white p-4 rounded-lg w-1/3 flex flex-col items-center">
-        <div className="text-3xl flex items-center mt-3 gap-2">
-          <SaveAll /> <span>Total Booking</span>
+      <div className="bg-white border border-green-200 rounded-2xl p-6 shadow-sm">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+            <SaveAll className="w-6 h-6 text-green-600" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900">Total Bookings</h3>
         </div>
-        <div className="text-5xl font-bold mt-8">{bookings?.length ?? 0}</div>
+        <div className="text-5xl font-bold text-green-600">{bookings?.length ?? 0}</div>
       </div>
 
       {/* Total Hours */}
-      <div className="bg-blue-800 text-white p-4 rounded-lg w-1/3 flex flex-col items-center">
-        <div className="text-3xl flex items-center mt-3 gap-2">
-          <Hourglass /> <span>Total Hours</span>
+      <div className="bg-white border border-blue-200 rounded-2xl p-6 shadow-sm">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+            <Hourglass className="w-6 h-6 text-blue-600" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900">Total Hours</h3>
         </div>
-        <div className="text-5xl font-bold mt-8">
+        <div className="text-5xl font-bold text-blue-600">
           {bookings
             ?.reduce((acc, booking) => {
               const start = new Date(booking.startTime).getTime();

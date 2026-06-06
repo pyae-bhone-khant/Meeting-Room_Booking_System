@@ -13,35 +13,40 @@ import AllBooking from "./AllBooking";
 import CreateBookingModal from "./CreateBooking";
 
 export default function AdminPage() {
-    
-
   return (
-    <div className="flex flex-col mt-8 lg:px-30 px-4">
-    <h1 className="text-3xl">Meeting Room Booking System</h1>
-     <div className="flex justify-between items-center">
+    <div className="w-full min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header Section */}
+        <div className="mb-10">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+          <p className="text-gray-600">Manage your meeting room booking system with ease</p>
+        </div>
 
-        <div className="mt-4 gap-4 flex">
-  <CreateBookingModal />
-       <CustomButton 
-        label="View All Bookings" 
-        onClick={() => console.log("View all bookings clicked")} 
-      />
-      
-        </div>  
+        {/* Action Bar */}
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex gap-4">
+            <CreateBookingModal />
+            <CustomButton 
+              label="View All Bookings" 
+              onClick={() => console.log("View all bookings clicked")} 
+            />
+          </div>
 
-         <CustomButton 
-        label={`Logout`} 
-        icon={<LogOut className="w-5 h-5" />}
-        variant="secondary"
-        onClick={() => handleLogout()} 
-      />
+          <CustomButton 
+            label="Logout" 
+            icon={<LogOut className="w-5 h-5" />}
+            variant="secondary"
+            onClick={() => handleLogout()} 
+          />
+        </div>
 
-     </div>
-    
-     <TotalData />
-     <SearchUser />
-     <AllBooking />
-
+        {/* Dashboard Components */}
+        <div className="space-y-8">
+          <TotalData />
+          <SearchUser />
+          <AllBooking />
+        </div>
+      </div>
     </div>
   );
 }
