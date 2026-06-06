@@ -1,34 +1,47 @@
 "use client";
 import { CustomButton } from "@/src/component/customButton";
 import { userService } from "@/src/lib/axios";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import CreateUserModal from "./createUser";
 import ChangeRoleModal from "./changeRole";
+import toast from "react-hot-toast";
+import { EmptyState } from "@/src/components/ui/empty-state";
+import { ConfirmationModal } from "@/src/components/ui/confirmation-modal";
 
 export default function SearchUser() {
   const [allUsers, setAllUsers] = useState<any[]>([]); // API မှရလာသော data အစစ်
   const [searchTerm, setSearchTerm] = useState("");   // Search input အတွက်
   const [deleteId, setDeleteId] = useState<string | null>(null); // State for modal visibility and the user to delete
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const refreshUsers = () => {
-    userService
-      .getAllUsersData()
-      .then((res) => {
-        setAllUsers(res.data);
-      })
-      .catch(console.error);
+  const refreshUsers = async () => {
+    setIsLoading(true);
+    try {
+      const res = await userService.getAllUsersData();
+      setAllUsers(res.data);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toast.error("Failed to fetch users");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const confirmDelete = async () => {
     if (!deleteId) return;
+    setIsDeleting(true);
     try {
       await userService.deleteUser(deleteId);
       setDeleteId(null); // Close modal
+      toast.success("User deleted successfully");
       refreshUsers();   // Refresh list
     } catch (error: any) {
       console.error("Delete failed details:", error.response?.data || error.message);
-      alert(`Failed to delete user: ${error.response?.data?.message || "Internal Server Error"}`);
+      toast.error(error.response?.data?.message || "Failed to delete user");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -44,24 +57,16 @@ export default function SearchUser() {
   return (
     <div className="w-full">
       {/* --- CONFIRMATION MODAL --- */}
-      {deleteId && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white border border-gray-200 p-6 rounded-2xl shadow-2xl w-96">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Delete User</h3>
-            <p className="text-gray-600 mb-6">Are you sure you want to delete this user? This action cannot be undone.</p>
-            <div className="flex gap-4">
-              <button 
-                onClick={confirmDelete} 
-                className="flex-1 bg-red-500 text-white py-3 rounded-xl hover:bg-red-600 font-semibold transition-colors"
-              >Delete</button>
-              <button 
-                onClick={() => setDeleteId(null)} 
-                className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl hover:bg-gray-200 font-semibold transition-colors"
-              >Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmationModal
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={confirmDelete}
+        title="Delete User"
+        message="Are you sure you want to delete this user? This action cannot be undone."
+        confirmText={isDeleting ? "Deleting..." : "Delete"}
+        cancelText="Cancel"
+        variant="danger"
+      />
 
       {/* Search Header */}
       <div className="bg-white border border-blue-200 flex mt-8 rounded-2xl px-6 items-center justify-between w-full h-20 shadow-sm">
@@ -96,50 +101,70 @@ export default function SearchUser() {
             </tr>
           </thead>
           <tbody>
-            {filteredUsers.map((user, index) => {
-              // Total Hours တွက်ချက်ခြင်း (Start/End Time ကိုအခြေခံပြီး တွက်သည်)
-              const totalHours = (user.bookings || []).reduce(
-                (acc: number, b: any) => {
-                  const start = new Date(b.startTime).getTime();
-                  const end = new Date(b.endTime).getTime();
-                  const hours = (end - start) / (1000 * 60 * 60);
-                  return acc + (isNaN(hours) ? 0 : hours);
-                },
-                0
-              );
+            {isLoading ? (
+              <tr>
+                <td colSpan={6} className="p-8 text-center">
+                  <div className="flex items-center justify-center gap-2 text-gray-500">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Loading users...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : filteredUsers.length === 0 ? (
+              <tr>
+                <td colSpan={6}>
+                  <EmptyState
+                    type={searchTerm ? "no-results" : "no-users"}
+                    message={searchTerm ? `No users found for "${searchTerm}"` : "No users in the system"}
+                  />
+                </td>
+              </tr>
+            ) : (
+              filteredUsers.map((user, index) => {
+                const totalHours = (user.bookings || []).reduce(
+                  (acc: number, b: any) => {
+                    const start = new Date(b.startTime).getTime();
+                    const end = new Date(b.endTime).getTime();
+                    const hours = (end - start) / (1000 * 60 * 60);
+                    return acc + (isNaN(hours) ? 0 : hours);
+                  },
+                  0
+                );
 
-              return (
-                <tr key={user.userId} className="border-t border-gray-200 hover:bg-blue-50 transition-colors">
-                  <td className="p-4 text-gray-700">{index + 1}.</td>
-                  <td className="p-4 text-gray-900 font-medium">{user.userName}</td>
-                  <td className="p-4">
-                    <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                      user.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' :
-                      user.role === 'OWNER' ? 'bg-green-100 text-green-700' :
-                      'bg-blue-100 text-blue-700'
-                    }`}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="p-4 text-gray-700">{user.totalBookings}</td>
-                  <td className="p-4 text-gray-700">{totalHours.toFixed(1)} hrs</td>
-                  <td className="p-4 flex justify-center gap-4">
-                    <ChangeRoleModal 
-                      userId={user.userId} 
-                      currentRole={user.role} 
-                      userName={user.userName}
-                      onSuccess={refreshUsers}
-                    />
-                    <button 
-                      className="text-gray-400 cursor-pointer hover:text-red-500 transition-colors"
-                      onClick={() => setDeleteId(user.userId)}
-                    >
-                      🗑️
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
+                return (
+                  <tr key={user.userId} className="border-t border-gray-200 hover:bg-blue-50 transition-colors">
+                    <td className="p-4 text-gray-700">{index + 1}.</td>
+                    <td className="p-4 text-gray-900 font-medium">{user.userName}</td>
+                    <td className="p-4">
+                      <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                        user.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' :
+                        user.role === 'OWNER' ? 'bg-green-100 text-green-700' :
+                        'bg-blue-100 text-blue-700'
+                      }`}>
+                        {user.role}
+                      </span>
+                    </td>
+                    <td className="p-4 text-gray-700">{user.totalBookings}</td>
+                    <td className="p-4 text-gray-700">{totalHours.toFixed(1)} hrs</td>
+                    <td className="p-4 flex justify-center gap-4">
+                      <ChangeRoleModal
+                        userId={user.userId}
+                        currentRole={user.role}
+                        userName={user.userName}
+                        onSuccess={refreshUsers}
+                      />
+                      <button
+                        className="text-gray-400 cursor-pointer hover:text-red-500 active:text-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={() => setDeleteId(user.userId)}
+                        disabled={isDeleting}
+                      >
+                        🗑️
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>
