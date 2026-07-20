@@ -17,7 +17,8 @@ export const authClient = createAuthClient({
    baseURL:
     process.env.NEXT_PUBLIC_API_URL ?
       `${process.env.NEXT_PUBLIC_API_URL}/api/auth`
-    : "http://localhost:8080/api/v1",
+    : "http://localhost:8080/api/auth",
+     withCredentials: true,
   fetchOptions: {
     credentials: "include",
   },
