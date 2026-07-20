@@ -9,7 +9,7 @@ import { createAuthClient } from "better-auth/react"
 // }) 
 
 // (Local တွင် http://localhost:3000 ဖြစ်ပြီး၊ Production Vercel တွင် မိမိ Vercel Domain ဖြစ်ပါမည်)
-import { createAuthClient } from "better-auth/react";
+// import { createAuthClient } from "better-auth/react";
 
 // Browser တွင် Run လျှင် "/api/auth" ကို သုံး၍ (Rewrite Proxy ဖြတ်ရန်)
 // Server/Build-time တွင် Run လျှင် Absolute URL ကို သုံးရန်
