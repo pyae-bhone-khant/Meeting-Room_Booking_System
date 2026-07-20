@@ -11,8 +11,12 @@ const ROLE_DASHBOARDS: Record<string, string> = {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // 🚨 ပြင်ဆင်ထားသည့် အဓိကနေရာ 🚨
+  // Cookie သာမက Origin, Host, Referer စသည့် Header အားလုံးကို Backend သို့ Forward လုပ်ပေးရန်
   const session = await authClient.getSession({
-    fetchOptions: { headers: { cookie: request.headers.get("cookie") || "" } },
+    fetchOptions: { 
+      headers: new Headers(request.headers), 
+    },
   });
 
   const user = session.data?.user as any;
@@ -34,7 +38,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // 3. Role Authorization Logic
-  const requiredRole = pathname.split("/")[1].toUpperCase(); // admin, owner, or user
+  const requiredRole = pathname.split("/")[1]?.toUpperCase(); // admin, owner, or user
 
   // အကယ်၍ current role က required role နဲ့ မကိုက်ရင်
   if (userRole !== requiredRole) {
