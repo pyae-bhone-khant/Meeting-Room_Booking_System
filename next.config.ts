@@ -19,7 +19,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   async rewrites() {
     // API ရဲ့ Base URL ကို သီးသန့် ခွဲထုတ်ယူပါမယ်
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6000';
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
     return [
       {
