@@ -9,7 +9,7 @@ import { createAuthClient } from "better-auth/react"
 // }) 
 
 // (Local တွင် http://localhost:3000 ဖြစ်ပြီး၊ Production Vercel တွင် မိမိ Vercel Domain ဖြစ်ပါမည်)
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const appUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 export const authClient = createAuthClient({
   // အပြည့်အစုံဖြစ်သော URL (e.g., http://localhost:3000/api/auth) ကို ထည့်ပေးရပါမည်
