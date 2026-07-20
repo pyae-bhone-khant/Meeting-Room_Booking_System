@@ -19,9 +19,9 @@ const getBaseURL = () => {
   }
   
   // Next.js Server / Build time (npm run build) အတွက်
-  return process.env.NEXT_PUBLIC_APP_URL 
-    ? `${process.env.NEXT_PUBLIC_APP_URL}/api/auth` 
-    : "http://localhost:3000/api/auth";
+  return process.env.NEXT_PUBLIC_API_URL
+    ? `${process.env.NEXT_PUBLIC_API_URL}/api/auth` 
+    : "http://localhost:8080/api/auth";
 };
 
 export const authClient = createAuthClient({
